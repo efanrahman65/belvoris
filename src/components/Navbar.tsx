@@ -23,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuote }) => {
     { label: 'About', href: '#about' },
     { label: 'Services', href: '#services' },
     { label: 'Products', href: '#products' },
-    { label: 'Process', href: '#process' },
     { label: 'Contact', href: '#contact' }
   ];
 

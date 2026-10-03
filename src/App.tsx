@@ -4,7 +4,6 @@ import { Hero } from './components/Hero';
 import { Introduction } from './components/Introduction';
 import { Services } from './components/Services';
 import { ProductCategories } from './components/ProductCategories';
-import { SourcingProcess } from './components/SourcingProcess';
 import { WhyBelvoris } from './components/WhyBelvoris';
 import { About } from './components/About';
 import { Leadership } from './components/Leadership';
@@ -56,32 +55,29 @@ export default function App() {
           onOpenQuoteWithCategory={(categoryName) => handleOpenQuote(categoryName)}
         />
 
-        {/* 6. Sourcing Process */}
-        <SourcingProcess onOpenQuote={() => handleOpenQuote()} />
-
-        {/* 7. Why Belvoris */}
+        {/* 6. Why Belvoris */}
         <WhyBelvoris />
 
-        {/* 8. About Section */}
+        {/* 7. About Section */}
         <About onOpenQuote={() => handleOpenQuote()} />
 
-        {/* 9. Leadership Section */}
+        {/* 8. Leadership Section */}
         <Leadership />
 
-        {/* 10. International Buyer CTA */}
+        {/* 9. International Buyer CTA */}
         <InternationalCTA onOpenQuote={() => handleOpenQuote()} />
 
-        {/* 11. Buyer Inquiry Form (UI Prototype) */}
+        {/* 10. Buyer Inquiry Form (UI Prototype) */}
         <InquiryForm
           prefilledCategory={selectedCategoryForQuote}
           onClearPrefill={() => setSelectedCategoryForQuote(undefined)}
         />
 
-        {/* 12. Contact Section */}
+        {/* 11. Contact Section */}
         <ContactSection onOpenQuote={() => handleOpenQuote()} />
       </main>
 
-      {/* 13. Footer */}
+      {/* 12. Footer */}
       <Footer onOpenQuote={() => handleOpenQuote()} />
     </div>
   );

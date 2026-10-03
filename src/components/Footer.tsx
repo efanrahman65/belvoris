@@ -11,7 +11,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQuote }) => {
     { label: 'About', href: '#about' },
     { label: 'Services', href: '#services' },
     { label: 'Products', href: '#products' },
-    { label: 'Process', href: '#process' },
     { label: 'Contact', href: '#contact' }
   ];
 
