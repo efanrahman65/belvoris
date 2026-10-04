@@ -24,17 +24,17 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote, onExploreServices }) =>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-[#8C827A] font-medium mb-6">
               <span>Dhaka, Bangladesh</span>
               <span aria-hidden="true" className="text-[#B8B1A6]">·</span>
-              <span>Apparel Buying & Sourcing House</span>
+              <span>Apparel & Denim Sourcing Partner</span>
             </div>
 
             {/* Hero Main Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl xl:text-[4.25rem] font-serif font-normal text-[#18181B] tracking-tight leading-[1.08] text-balance mb-6 sm:mb-8">
-              YOUR GLOBAL APPAREL SOURCING PARTNER
+              YOUR GLOBAL APPAREL & DENIM SOURCING PARTNER
             </h1>
 
             {/* Supporting Paragraph */}
             <p className="text-base sm:text-lg text-[#524E48] font-light leading-relaxed max-w-xl mb-8 sm:mb-10">
-              Connecting international buyers with reliable apparel sourcing and production in Bangladesh.
+              Connecting international buyers, emerging labels, and global fashion brands with dependable apparel production and specialized denim sourcing in Bangladesh.
             </p>
 
             {/* CTAs */}
@@ -47,27 +47,27 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote, onExploreServices }) =>
                 <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </button>
 
-              <button
-                onClick={onExploreServices}
+              <a
+                href="#denim"
                 className="inline-flex items-center justify-center px-7 py-3.5 text-xs font-medium tracking-[0.14em] uppercase text-[#18181B] bg-transparent border border-[#18181B]/20 hover:border-[#18181B] hover:bg-[#18181B]/5 transition-all duration-200 cursor-pointer"
               >
-                EXPLORE SERVICES
-              </button>
+                EXPLORE DENIM SOLUTIONS
+              </a>
             </div>
 
             {/* Trust Anchors - Minimal Editorial Specifiers */}
             <div className="pt-10 sm:pt-12 mt-10 border-t border-[#1A1A1A]/10 grid grid-cols-3 gap-6 text-left">
               <div>
-                <span className="block text-xl sm:text-2xl font-serif text-[#18181B]">Woven & Knit</span>
-                <span className="text-[11px] uppercase tracking-wider text-[#8C827A] mt-1 block">Category Versatility</span>
+                <span className="block text-xl sm:text-2xl font-serif text-[#18181B]">Denim Hero</span>
+                <span className="text-[11px] uppercase tracking-wider text-[#8C827A] mt-1 block">Selvedge, Washes & Fits</span>
               </div>
               <div>
-                <span className="block text-xl sm:text-2xl font-serif text-[#18181B]">AQL Standard</span>
-                <span className="text-[11px] uppercase tracking-wider text-[#8C827A] mt-1 block">Quality Governance</span>
+                <span className="block text-xl sm:text-2xl font-serif text-[#18181B]">Full Chain</span>
+                <span className="text-[11px] uppercase tracking-wider text-[#8C827A] mt-1 block">Fiber to Final Shipment</span>
               </div>
               <div>
-                <span className="block text-xl sm:text-2xl font-serif text-[#18181B]">Direct Bridge</span>
-                <span className="text-[11px] uppercase tracking-wider text-[#8C827A] mt-1 block">Buyer to Factory</span>
+                <span className="block text-xl sm:text-2xl font-serif text-[#18181B]">Startups & Growth</span>
+                <span className="text-[11px] uppercase tracking-wider text-[#8C827A] mt-1 block">Emerging Brand Support</span>
               </div>
             </div>
 

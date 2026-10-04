@@ -1,6 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { PRODUCT_CATEGORIES } from '../data/apparelData';
-import { CheckCircle2, ArrowRight, AlertCircle, RefreshCw, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { EXPANDED_PRODUCT_PORTFOLIO } from '../data/apparelData';
+import {
+  CheckCircle2,
+  ArrowRight,
+  AlertCircle,
+  RefreshCw,
+  FileText,
+  Paperclip,
+  UploadCloud,
+  X,
+  FileCheck
+} from 'lucide-react';
 
 interface InquiryFormProps {
   prefilledCategory?: string;
@@ -37,12 +47,16 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
     contactNumber: '',
     emailAddress: '',
     productRequirement: '',
-    orderQuantity: '1,000 - 3,000 pcs',
+    orderQuantity: 'Flexible / Based on Sourcing Feasibility',
     targetDeliveryDate: '',
-    productCategory: prefilledCategory || 'T-Shirts',
+    productCategory: prefilledCategory || 'Denim Jeans & Bottoms',
     additionalRequirements: '',
     agreedToTerms: false
   });
+
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,25 +68,72 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
     }
   }, [prefilledCategory]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 15 MB maximum size limit
+    const MAX_SIZE_MB = 15;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+    if (file.size > MAX_SIZE_BYTES) {
+      setFileError(`File size exceeds ${MAX_SIZE_MB}MB limit (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose a smaller file.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Supported extensions: PDF, JPG, JPEG, PNG, DOCX, DOC
+    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.docx', '.doc'];
+    const fileNameLower = file.name.toLowerCase();
+    const isAllowed = allowedExtensions.some((ext) => fileNameLower.endsWith(ext));
+
+    if (!isAllowed) {
+      setFileError('Unsupported file type. Please upload a PDF, JPG, JPEG, PNG, or DOCX document.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setAttachedFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setAttachedFile(null);
+    setFileError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.companyName.trim()) {
       newErrors.companyName = 'Company name is required';
     }
+
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Contact person full name is required';
+      newErrors.fullName = 'Full name is required';
     }
+
     if (!formData.emailAddress.trim()) {
       newErrors.emailAddress = 'Corporate email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
       newErrors.emailAddress = 'Please enter a valid email address';
     }
+
     if (!formData.productRequirement.trim()) {
-      newErrors.productRequirement = 'Please describe your apparel or sourcing requirement';
+      newErrors.productRequirement = 'Please provide details about your garment requirements';
     }
+
     if (!formData.agreedToTerms) {
-      newErrors.agreedToTerms = 'Please confirm agreement to be contacted regarding this inquiry';
+      newErrors.agreedToTerms = 'You must agree to be contacted regarding this sourcing request';
     }
 
     setErrors(newErrors);
@@ -81,12 +142,14 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!validate()) {
       return;
     }
 
     setIsSubmitting(true);
-    // Simulate UI submission latency (Phase 1 prototype)
+
+    // Simulate structured processing and client intake
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
@@ -102,18 +165,22 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
       contactNumber: '',
       emailAddress: '',
       productRequirement: '',
-      orderQuantity: '1,000 - 3,000 pcs',
+      orderQuantity: 'Flexible / Based on Sourcing Feasibility',
       targetDeliveryDate: '',
-      productCategory: 'T-Shirts',
+      productCategory: 'Denim Jeans & Bottoms',
       additionalRequirements: '',
       agreedToTerms: false
     });
+    setAttachedFile(null);
+    setFileError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setErrors({});
     if (onClearPrefill) onClearPrefill();
   };
 
   const quantityOptions = [
-    '500 - 1,000 pcs (Test / Capsule)',
+    'Emerging Brand / Test Capsule (Reviewing Feasibility)',
+    '500 - 1,000 pcs (Subject to mill & style specs)',
     '1,000 - 3,000 pcs',
     '3,000 - 5,000 pcs',
     '5,000 - 10,000 pcs',
@@ -133,7 +200,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
             TELL US WHAT YOU'RE LOOKING FOR
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#595550] font-light max-w-xl mx-auto">
-            Share your requirements and our team will get back to you.
+            Share your requirements and reference materials—our team will review feasibility and get back to you with next steps.
           </p>
         </div>
 
@@ -141,7 +208,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
         <div className="bg-[#FAF9F5] border border-[#1A1A1A]/15 p-8 sm:p-12 shadow-[0_4px_30px_-4px_rgba(0,0,0,0.03)] relative">
           
           {isSubmitted ? (
-            /* Success State Mockup */
+            /* Success State */
             <div className="py-8 text-center animate-in fade-in duration-300">
               <div className="w-16 h-16 bg-[#F3EFE8] border border-[#1A1A1A]/20 flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-8 h-8 text-[#18181B]" />
@@ -154,7 +221,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 Thank you, {formData.fullName || 'Buyer'}
               </h3>
               <p className="text-sm sm:text-base text-[#524E48] font-light max-w-md mx-auto mb-8 leading-relaxed">
-                Your sourcing inquiry for <strong className="font-medium text-[#18181B]">{formData.companyName}</strong> has been logged in the Phase 1 UI prototype. In Phase 2, this will route automatically to our direct sourcing inbox.
+                Your sourcing inquiry for <strong className="font-medium text-[#18181B]">{formData.companyName}</strong> has been logged in the Phase 1 UI prototype. In Phase 2, this will route automatically to our direct sourcing inbox with your attached files.
               </p>
 
               {/* Inquiry Summary Preview Card */}
@@ -173,9 +240,22 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                     <span className="font-medium text-[#18181B]">{formData.targetDeliveryDate}</span>
                   </div>
                 )}
-                <div>
+                <div className="border-b border-[#1A1A1A]/10 pb-2">
                   <span className="text-[#8C827A] font-mono uppercase tracking-wider block mb-1">Requirement Notes</span>
                   <p className="text-[#383531] font-light">{formData.productRequirement}</p>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[#8C827A] font-mono uppercase tracking-wider">Product References</span>
+                  <span className="font-medium text-[#18181B] flex items-center gap-1.5">
+                    {attachedFile ? (
+                      <>
+                        <FileCheck className="w-3.5 h-3.5 text-[#18181B]" />
+                        <span>{attachedFile.name} ({formatFileSize(attachedFile.size)})</span>
+                      </>
+                    ) : (
+                      <span className="text-[#8C827A] font-light">None attached (Optional)</span>
+                    )}
+                  </span>
                 </div>
               </div>
 
@@ -217,12 +297,12 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
 
                 <div>
                   <label htmlFor="fullName" className="block text-xs uppercase tracking-[0.14em] text-[#383531] font-medium mb-2">
-                    Full Name <span className="text-red-600">*</span>
+                    Contact Person Name <span className="text-red-600">*</span>
                   </label>
                   <input
                     id="fullName"
                     type="text"
-                    placeholder="e.g. Marcus Vance"
+                    placeholder="e.g. Sarah Lindqvist"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors ${
@@ -242,12 +322,12 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="designation" className="block text-xs uppercase tracking-[0.14em] text-[#383531] font-medium mb-2">
-                    Designation
+                    Designation / Title
                   </label>
                   <input
                     id="designation"
                     type="text"
-                    placeholder="e.g. Head of Sourcing / Buyer"
+                    placeholder="e.g. Sourcing Director / Lead Buyer"
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                     className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
@@ -256,12 +336,12 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
 
                 <div>
                   <label htmlFor="contactNumber" className="block text-xs uppercase tracking-[0.14em] text-[#383531] font-medium mb-2">
-                    Contact Number
+                    Contact / WhatsApp Number
                   </label>
                   <input
                     id="contactNumber"
                     type="tel"
-                    placeholder="+44 20 7946 0991 / WhatsApp"
+                    placeholder="e.g. +44 20 7946 0991"
                     value={formData.contactNumber}
                     onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
                     className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
@@ -269,15 +349,15 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 </div>
               </div>
 
-              {/* Row 3: Email Address */}
+              {/* Row 3: Corporate Email Address */}
               <div>
                 <label htmlFor="emailAddress" className="block text-xs uppercase tracking-[0.14em] text-[#383531] font-medium mb-2">
-                  Email Address <span className="text-red-600">*</span>
+                  Corporate Email Address <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="emailAddress"
                   type="email"
-                  placeholder="buyer@brand-domain.com"
+                  placeholder="e.g. sourcing@nordic-atelier.com"
                   value={formData.emailAddress}
                   onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
                   className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors ${
@@ -304,11 +384,16 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                     onChange={(e) => setFormData({ ...formData, productCategory: e.target.value })}
                     className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] focus:outline-none focus:border-[#18181B] transition-colors cursor-pointer"
                   >
-                    {PRODUCT_CATEGORIES.map((cat) => (
+                    <option value="Woven Apparel (All Items)">Woven Apparel (All Items)</option>
+                    <option value="Knit Apparel (All Items)">Knit Apparel (All Items)</option>
+                    <option value="Denim Collection">Denim Collection (Jeans, Jackets, Shirts)</option>
+                    {EXPANDED_PRODUCT_PORTFOLIO.map((cat) => (
                       <option key={cat.id} value={cat.name}>
-                        {cat.name} ({cat.group})
+                        {cat.name} ({cat.group.toUpperCase()})
                       </option>
                     ))}
+                    <option value="Complete Supply Chain Consultation">Complete Supply Chain Consultation</option>
+                    <option value="Emerging Brand Starter Program">Emerging Brand Starter Program</option>
                     <option value="Multi-Category Program">Multi-Category Program</option>
                     <option value="Other Custom Sourcing">Other Custom Sourcing</option>
                   </select>
@@ -384,6 +469,80 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   onChange={(e) => setFormData({ ...formData, additionalRequirements: e.target.value })}
                   className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
                 />
+              </div>
+
+              {/* Row 8: Optional File Attachment Field */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="fileAttachmentInput" className="block text-xs uppercase tracking-[0.14em] text-[#383531] font-medium">
+                    Attach Product References (Optional)
+                  </label>
+                  <span className="text-[11px] font-mono text-[#8C827A]">
+                    Max 15 MB · PDF, JPG, PNG, DOCX
+                  </span>
+                </div>
+                <p className="text-xs text-[#6B655D] mb-3 font-light leading-relaxed">
+                  Upload product images, tech packs, specifications, or reference documents.
+                </p>
+
+                {/* Hidden File Input */}
+                <input
+                  ref={fileInputRef}
+                  id="fileAttachmentInput"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {/* File Attachment Presentation Box */}
+                {!attachedFile ? (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border border-dashed border-[#1A1A1A]/25 hover:border-[#18181B] bg-[#F6F4EF]/60 hover:bg-[#F6F4EF] p-6 text-center cursor-pointer transition-all duration-200 group"
+                  >
+                    <UploadCloud className="w-6 h-6 text-[#8C827A] group-hover:text-[#18181B] mx-auto mb-2 transition-colors" />
+                    <div className="text-xs text-[#18181B] font-medium">
+                      <span>Click to select file</span>
+                      <span className="text-[#6B655D] font-normal"> or drag and drop</span>
+                    </div>
+                    <div className="text-[11px] text-[#8C827A] mt-1 font-mono">
+                      Supported formats: PDF, JPG, JPEG, PNG, DOCX
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-[#F3EFE8] border border-[#1A1A1A]/15 flex items-center justify-between gap-4 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-9 h-9 bg-[#FAF9F5] border border-[#1A1A1A]/10 flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5 text-[#18181B]" />
+                      </div>
+                      <div className="truncate">
+                        <div className="text-xs font-medium text-[#18181B] truncate">
+                          {attachedFile.name}
+                        </div>
+                        <div className="text-[11px] font-mono text-[#8C827A]">
+                          {formatFileSize(attachedFile.size)} · Ready to submit
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#B91C1C] hover:text-[#7F1D1D] bg-[#FAF9F5] border border-[#B91C1C]/20 hover:border-[#B91C1C]/40 transition-colors cursor-pointer shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                )}
+
+                {fileError && (
+                  <p className="text-[11px] text-red-600 mt-2 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fileError}</span>
+                  </p>
+                )}
               </div>
 
               {/* Checkbox: Agreement */}

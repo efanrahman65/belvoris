@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Introduction } from './components/Introduction';
-import { Services } from './components/Services';
+import { DenimSection } from './components/DenimSection';
+import { SupplyChain } from './components/SupplyChain';
 import { ProductCategories } from './components/ProductCategories';
+import { EmergingBuyers } from './components/EmergingBuyers';
+import { Services } from './components/Services';
 import { WhyBelvoris } from './components/WhyBelvoris';
 import { About } from './components/About';
 import { Leadership } from './components/Leadership';
@@ -47,37 +50,46 @@ export default function App() {
         {/* 3. Introduction Section */}
         <Introduction onOpenQuote={() => handleOpenQuote()} />
 
-        {/* 4. Services Section */}
-        <Services onOpenQuote={(serviceName) => handleOpenQuote(serviceName)} />
+        {/* 4. Dedicated Denim Hero & Solutions Section */}
+        <DenimSection onOpenQuote={(cat) => handleOpenQuote(cat)} />
 
-        {/* 5. Product Categories */}
+        {/* 5. Complete Supply Chain: From Fiber to Shipment (8 Stages) */}
+        <SupplyChain onOpenQuote={(stage) => handleOpenQuote(stage)} />
+
+        {/* 6. Comprehensive Product Portfolio (5 Groups) */}
         <ProductCategories
           onOpenQuoteWithCategory={(categoryName) => handleOpenQuote(categoryName)}
         />
 
-        {/* 6. Why Belvoris */}
+        {/* 7. Dedicated Support for Small & Emerging Brands */}
+        <EmergingBuyers onOpenQuote={(note) => handleOpenQuote(note)} />
+
+        {/* 8. Core Sourcing Capabilities & Services */}
+        <Services onOpenQuote={(serviceName) => handleOpenQuote(serviceName)} />
+
+        {/* 9. Trust & Quality Pillars (Why Belvoris) */}
         <WhyBelvoris />
 
-        {/* 7. About Section */}
+        {/* 10. About Section */}
         <About onOpenQuote={() => handleOpenQuote()} />
 
-        {/* 8. Leadership Section */}
+        {/* 11. Leadership Section */}
         <Leadership />
 
-        {/* 9. International Buyer CTA */}
+        {/* 12. International Buyer CTA */}
         <InternationalCTA onOpenQuote={() => handleOpenQuote()} />
 
-        {/* 10. Buyer Inquiry Form (UI Prototype) */}
+        {/* 13. Buyer Inquiry Form (UI Prototype) */}
         <InquiryForm
           prefilledCategory={selectedCategoryForQuote}
           onClearPrefill={() => setSelectedCategoryForQuote(undefined)}
         />
 
-        {/* 11. Contact Section */}
+        {/* 14. Contact Section */}
         <ContactSection onOpenQuote={() => handleOpenQuote()} />
       </main>
 
-      {/* 12. Footer */}
+      {/* 15. Footer */}
       <Footer onOpenQuote={() => handleOpenQuote()} />
     </div>
   );

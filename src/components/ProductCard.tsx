@@ -52,8 +52,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelectProdu
 
         {/* Bottom Metadata */}
         <div className="mt-4 pt-4 border-t border-[#1A1A1A]/8 flex items-center justify-between text-[11px]">
-          <span className="text-[#8C827A]">Indicative MOQ</span>
-          <span className="font-mono text-[#2C2B29] font-medium">{product.typicalMOQ}</span>
+          <span className="text-[#8C827A]">Core Specification</span>
+          <span className="font-mono text-[#2C2B29] font-medium">{product.highlights?.[0] || 'Custom Sourced'}</span>
         </div>
       </div>
     </div>

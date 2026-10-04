@@ -20,9 +20,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuote }) => {
 
   const navLinks = [
     { label: 'Home', href: '#hero' },
-    { label: 'About', href: '#about' },
-    { label: 'Services', href: '#services' },
+    { label: 'Denim', href: '#denim' },
+    { label: 'Supply Chain', href: '#supply-chain' },
     { label: 'Products', href: '#products' },
+    { label: 'Emerging Brands', href: '#emerging-brands' },
+    { label: 'Services', href: '#services' },
     { label: 'Contact', href: '#contact' }
   ];
 
