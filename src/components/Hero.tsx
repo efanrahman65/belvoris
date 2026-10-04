@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
+import heroApparelImg from '../assets/images/belvoris_hero_apparel_1791038873651.jpg';
 
 interface HeroProps {
   onOpenQuote: () => void;
@@ -78,7 +79,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote, onExploreServices }) =>
               {/* Refined offset shadow border */}
               <div className="relative aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5] w-full overflow-hidden bg-[#EAE6DF]">
                 <img
-                  src="/src/assets/images/belvoris_hero_apparel_1791038873651.jpg"
+                  src={heroApparelImg}
                   alt="Editorial garment production and fine fabric craftsmanship at BELVORIS sourcing studio"
                   className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                   referrerPolicy="no-referrer"

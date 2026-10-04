@@ -1,3 +1,16 @@
+import catTshirtImg from '../assets/images/belvoris_cat_tshirt_1791039678735.jpg';
+import catPoloImg from '../assets/images/belvoris_cat_polo_1791039693046.jpg';
+import catShirtImg from '../assets/images/belvoris_cat_shirt_1791039706539.jpg';
+import catHoodieImg from '../assets/images/belvoris_cat_hoodie_1791039718277.jpg';
+import catSweatshirtImg from '../assets/images/belvoris_cat_sweatshirt_1791039730227.jpg';
+import catJacketImg from '../assets/images/belvoris_cat_jacket_1791039741928.jpg';
+import catKnitwearImg from '../assets/images/belvoris_cat_knitwear_1791039754475.jpg';
+import catWovensImg from '../assets/images/belvoris_cat_wovens_1791039767081.jpg';
+import catCasualwearImg from '../assets/images/belvoris_cat_casualwear_1791039779616.jpg';
+import catWorkwearImg from '../assets/images/belvoris_cat_workwear_1791039792590.jpg';
+import catKidswearImg from '../assets/images/belvoris_cat_kidswear_1791039804608.jpg';
+import catBasicsImg from '../assets/images/belvoris_cat_basics_1791039817477.jpg';
+
 export interface ServiceItem {
   id: string;
   number: string;
@@ -115,7 +128,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'knits',
     fabricTypes: 'Single Jersey, Pima Cotton, Slub, Organic Blends',
     description: 'Custom GSM weights from 140 to 280 GSM. Pigment dyes, enzyme washes, screen prints, and embroidery.',
-    image: '/src/assets/images/belvoris_cat_tshirt_1791039678735.jpg',
+    image: catTshirtImg,
     typicalMOQ: '1,000 pcs / colorway'
   },
   {
@@ -124,7 +137,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'knits',
     fabricTypes: 'Classic Piqué, Honeycomb, Mercerized Cotton',
     description: 'Flat knit jacquard collars, mother-of-pearl or custom engraved buttons, reinforced side vents.',
-    image: '/src/assets/images/belvoris_cat_polo_1791039693046.jpg',
+    image: catPoloImg,
     typicalMOQ: '800 pcs / colorway'
   },
   {
@@ -133,7 +146,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'wovens',
     fabricTypes: 'Poplin, Oxford, Twill, Linen Blends, Yarn-Dyed Checks',
     description: 'Tailored casual and business shirts. Non-iron, garment-washed, spread and button-down collar constructions.',
-    image: '/src/assets/images/belvoris_cat_shirt_1791039706539.jpg',
+    image: catShirtImg,
     typicalMOQ: '600 pcs / style'
   },
   {
@@ -142,7 +155,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'knits',
     fabricTypes: 'Heavyweight French Terry, Brushed Fleece (320–480 GSM)',
     description: 'Oversized boxy fits, double-layered hoods, custom metal eyelets, silicone-tipped drawstrings.',
-    image: '/src/assets/images/belvoris_cat_hoodie_1791039718277.jpg',
+    image: catHoodieImg,
     typicalMOQ: '600 pcs / colorway'
   },
   {
@@ -151,7 +164,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'knits',
     fabricTypes: 'Loopback Terry, Diagonal Fleece, Cotton-Poly Blends',
     description: 'Clean crewneck silhouettes with 1x1 or 2x2 elastane rib trims, dropped shoulders, and garment-dye finishes.',
-    image: '/src/assets/images/belvoris_cat_sweatshirt_1791039730227.jpg',
+    image: catSweatshirtImg,
     typicalMOQ: '600 pcs / colorway'
   },
   {
@@ -160,7 +173,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'outerwear',
     fabricTypes: 'Cotton Twill, Ripstop, Canvas, Water-Resistant Nylon',
     description: 'Lightweight coach jackets, unlined chore overshirts, denim jackets, and urban utility silhouettes.',
-    image: '/src/assets/images/belvoris_cat_jacket_1791039741928.jpg',
+    image: catJacketImg,
     typicalMOQ: '500 pcs / style'
   },
   {
@@ -169,7 +182,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'knits',
     fabricTypes: 'Fine Gauge 12GG, Heavy Gauge 5GG, Cotton-Cashmere',
     description: 'Cardigans, roll-necks, and crew knits sourced from fully-fashioned computerized flat-knitting units.',
-    image: '/src/assets/images/belvoris_cat_knitwear_1791039754475.jpg',
+    image: catKnitwearImg,
     typicalMOQ: '500 pcs / style'
   },
   {
@@ -178,7 +191,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'wovens',
     fabricTypes: 'Chino Twills, Tencel, Linen, Cotton Canvas',
     description: 'Chino trousers, tailored Bermuda shorts, cargo pants, and structured casual bottomwear.',
-    image: '/src/assets/images/belvoris_cat_wovens_1791039767081.jpg',
+    image: catWovensImg,
     typicalMOQ: '800 pcs / style'
   },
   {
@@ -187,7 +200,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'essentials',
     fabricTypes: 'Cotton-Modal, Ribbed Knits, Soft Touch Blends',
     description: 'Lounge pants, casual co-ords, relaxed track tops, and modern lifestyle separates.',
-    image: '/src/assets/images/belvoris_cat_casualwear_1791039779616.jpg',
+    image: catCasualwearImg,
     typicalMOQ: '600 pcs / style'
   },
   {
@@ -196,7 +209,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'wovens',
     fabricTypes: 'Heavyweight Duck Canvas, Poly-Cotton Twill (240–320 GSM)',
     description: 'Reinforced triple-needle stitching, bar-tacked stress points, durable utility pockets, and industrial wash tolerance.',
-    image: '/src/assets/images/belvoris_cat_workwear_1791039792590.jpg',
+    image: catWorkwearImg,
     typicalMOQ: '1,000 pcs / style'
   },
   {
@@ -205,7 +218,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'essentials',
     fabricTypes: 'Organic Combed Cotton, Soft Interlock, OEKO-TEX compliant',
     description: 'Baby rompers, children t-shirts, joggers, and playsuits with nickel-free snaps and skin-safe dyes.',
-    image: '/src/assets/images/belvoris_cat_kidswear_1791039804608.jpg',
+    image: catKidswearImg,
     typicalMOQ: '1,000 pcs / style'
   },
   {
@@ -214,7 +227,7 @@ export const PRODUCT_CATEGORIES: ProductCategoryItem[] = [
     group: 'essentials',
     fabricTypes: 'Supreme Combed Jersey, Rib Knit 2x1, Seamless Blends',
     description: 'High-rotation wardrobe essentials: tank tops, base layers, long-sleeve crews, and minimalist undergarments.',
-    image: '/src/assets/images/belvoris_cat_basics_1791039817477.jpg',
+    image: catBasicsImg,
     typicalMOQ: '1,200 pcs / colorway'
   }
 ];

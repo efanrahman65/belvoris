@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import fabricDetailImg from '../assets/images/belvoris_fabric_detail_1791038890524.jpg';
 
 interface IntroductionProps {
   onOpenQuote: () => void;
@@ -64,7 +65,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onOpenQuote }) => {
             <div className="space-y-6">
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#E2DDD5] shadow-sm">
                 <img
-                  src="/src/assets/images/belvoris_fabric_detail_1791038890524.jpg"
+                  src={fabricDetailImg}
                   alt="Macro textile weave and fabric quality detail sourced by BELVORIS"
                   className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                   referrerPolicy="no-referrer"

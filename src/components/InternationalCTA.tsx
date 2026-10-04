@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import atelierCtaImg from '../assets/images/belvoris_atelier_cta_1791038942232.jpg';
 
 interface InternationalCTAProps {
   onOpenQuote: () => void;
@@ -11,7 +12,7 @@ export const InternationalCTA: React.FC<InternationalCTAProps> = ({ onOpenQuote 
       {/* Background Image with Measured Contrast Scrim */}
       <div className="absolute inset-0 -z-10">
         <img
-          src="/src/assets/images/belvoris_atelier_cta_1791038942232.jpg"
+          src={atelierCtaImg}
           alt="BELVORIS apparel atelier and sourcing studio"
           className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-105"
           referrerPolicy="no-referrer"
