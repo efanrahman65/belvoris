@@ -9,7 +9,8 @@ import {
   Paperclip,
   UploadCloud,
   X,
-  FileCheck
+  FileCheck,
+  Send
 } from 'lucide-react';
 
 interface InquiryFormProps {
@@ -39,6 +40,17 @@ interface FormErrors {
   agreedToTerms?: string;
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onClearPrefill }) => {
   const [formData, setFormData] = useState<FormState>({
     companyName: '',
@@ -61,6 +73,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (prefilledCategory) {
@@ -73,12 +86,12 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 15 MB maximum size limit
-    const MAX_SIZE_MB = 15;
+    // 4 MB maximum size limit to guarantee Vercel Serverless function compatibility
+    const MAX_SIZE_MB = 4;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
     if (file.size > MAX_SIZE_BYTES) {
-      setFileError(`File size exceeds ${MAX_SIZE_MB}MB limit (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose a smaller file.`);
+      setFileError(`File size exceeds the ${MAX_SIZE_MB}MB serverless upload limit (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose a file under ${MAX_SIZE_MB}MB or email large documents directly to efanrahman32824@gmail.com.`);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -119,7 +132,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
     }
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = 'Contact person name is required';
     }
 
     if (!formData.emailAddress.trim()) {
@@ -129,19 +142,20 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
     }
 
     if (!formData.productRequirement.trim()) {
-      newErrors.productRequirement = 'Please provide details about your garment requirements';
+      newErrors.productRequirement = 'Please describe your garment requirements';
     }
 
     if (!formData.agreedToTerms) {
-      newErrors.agreedToTerms = 'You must agree to be contacted regarding this sourcing request';
+      newErrors.agreedToTerms = 'Please confirm agreement to be contacted regarding this sourcing inquiry';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
 
     if (!validate()) {
       return;
@@ -149,15 +163,63 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
 
     setIsSubmitting(true);
 
-    // Simulate structured processing and client intake
-    setTimeout(() => {
+    try {
+      let attachmentPayload = null;
+      if (attachedFile) {
+        const base64Data = await fileToBase64(attachedFile);
+        attachmentPayload = {
+          filename: attachedFile.name,
+          content: base64Data,
+          contentType: attachedFile.type,
+          size: attachedFile.size
+        };
+      }
+
+      const payload = {
+        companyName: formData.companyName.trim(),
+        fullName: formData.fullName.trim(),
+        designation: formData.designation.trim(),
+        contactNumber: formData.contactNumber.trim(),
+        emailAddress: formData.emailAddress.trim(),
+        productCategory: formData.productCategory,
+        orderQuantity: formData.orderQuantity,
+        targetDeliveryDate: formData.targetDeliveryDate.trim(),
+        productRequirement: formData.productRequirement.trim(),
+        additionalRequirements: formData.additionalRequirements.trim(),
+        attachment: attachmentPayload
+      };
+
+      const res = await fetch('/api/send-inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.success) {
+        setIsSubmitted(true);
+      } else {
+        const errMsg =
+          data?.error ||
+          'Failed to send inquiry email. Please check your details or contact us directly at efanrahman32824@gmail.com.';
+        setSubmitError(errMsg);
+      }
+    } catch (err: any) {
+      console.error('Submission network error:', err);
+      setSubmitError(
+        'A network or server error occurred while sending your inquiry. Please try again, or email us directly at efanrahman32824@gmail.com.'
+      );
+    } finally {
       setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 600);
+    }
   };
 
   const handleReset = () => {
     setIsSubmitted(false);
+    setSubmitError(null);
     setFormData({
       companyName: '',
       fullName: '',
@@ -200,7 +262,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
             TELL US WHAT YOU'RE LOOKING FOR
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#595550] font-light max-w-xl mx-auto">
-            Share your requirements and reference materials—our team will review feasibility and get back to you with next steps.
+            Share your requirements and reference materials—our team will review feasibility and get back to you soon.
           </p>
         </div>
 
@@ -215,17 +277,22 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
               </div>
 
               <div className="text-xs uppercase tracking-[0.2em] text-[#8C827A] font-medium mb-2">
-                Inquiry Intake Recorded (Prototype Mode)
+                Inquiry Received Successfully
               </div>
               <h3 className="text-2xl sm:text-3xl font-serif text-[#18181B] mb-4">
-                Thank you, {formData.fullName || 'Buyer'}
+                Thank You, {formData.fullName || 'Buyer'}
               </h3>
-              <p className="text-sm sm:text-base text-[#524E48] font-light max-w-md mx-auto mb-8 leading-relaxed">
-                Your sourcing inquiry for <strong className="font-medium text-[#18181B]">{formData.companyName}</strong> has been logged in the Phase 1 UI prototype. In Phase 2, this will route automatically to our direct sourcing inbox with your attached files.
-              </p>
+              
+              <div className="max-w-lg mx-auto mb-8 p-4 bg-[#F3EFE8] border border-[#1A1A1A]/10 text-sm text-[#2C2B29] leading-relaxed">
+                Thank you for contacting BELVORIS. Your inquiry has been received successfully. Our team will review your requirements and get back to you soon.
+              </div>
 
               {/* Inquiry Summary Preview Card */}
               <div className="p-6 bg-[#F3EFE8] border border-[#1A1A1A]/10 text-left max-w-lg mx-auto mb-8 text-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-[#1A1A1A]/10 pb-2">
+                  <span className="text-[#8C827A] font-mono uppercase tracking-wider">Company</span>
+                  <span className="font-medium text-[#18181B]">{formData.companyName}</span>
+                </div>
                 <div className="flex items-center justify-between border-b border-[#1A1A1A]/10 pb-2">
                   <span className="text-[#8C827A] font-mono uppercase tracking-wider">Category</span>
                   <span className="font-medium text-[#18181B]">{formData.productCategory}</span>
@@ -271,6 +338,23 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
             /* Interactive Inquiry Form */
             <form onSubmit={handleSubmit} noValidate className="space-y-6">
               
+              {/* Submission Error Banner */}
+              {submitError && (
+                <div className="p-4 bg-red-50 border border-red-200 text-left animate-in fade-in duration-200">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="text-xs font-semibold text-red-800 uppercase tracking-wider mb-1">
+                        Inquiry Submission Issue
+                      </div>
+                      <p className="text-xs text-red-700 leading-relaxed font-light">
+                        {submitError}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Row 1: Company Name & Full Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
@@ -280,10 +364,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   <input
                     id="companyName"
                     type="text"
+                    disabled={isSubmitting}
                     placeholder="e.g. Nordic Atelier Ltd"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors ${
+                    className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60 ${
                       errors.companyName ? 'border-red-500' : 'border-[#1A1A1A]/20'
                     }`}
                   />
@@ -302,10 +387,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   <input
                     id="fullName"
                     type="text"
+                    disabled={isSubmitting}
                     placeholder="e.g. Sarah Lindqvist"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors ${
+                    className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60 ${
                       errors.fullName ? 'border-red-500' : 'border-[#1A1A1A]/20'
                     }`}
                   />
@@ -327,10 +413,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   <input
                     id="designation"
                     type="text"
+                    disabled={isSubmitting}
                     placeholder="e.g. Sourcing Director / Lead Buyer"
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
+                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60"
                   />
                 </div>
 
@@ -341,10 +428,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   <input
                     id="contactNumber"
                     type="tel"
+                    disabled={isSubmitting}
                     placeholder="e.g. +44 20 7946 0991"
                     value={formData.contactNumber}
                     onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
+                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -357,10 +445,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 <input
                   id="emailAddress"
                   type="email"
+                  disabled={isSubmitting}
                   placeholder="e.g. sourcing@nordic-atelier.com"
                   value={formData.emailAddress}
                   onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
-                  className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors ${
+                  className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60 ${
                     errors.emailAddress ? 'border-red-500' : 'border-[#1A1A1A]/20'
                   }`}
                 />
@@ -380,9 +469,10 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   </label>
                   <select
                     id="productCategory"
+                    disabled={isSubmitting}
                     value={formData.productCategory}
                     onChange={(e) => setFormData({ ...formData, productCategory: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] focus:outline-none focus:border-[#18181B] transition-colors cursor-pointer"
+                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] focus:outline-none focus:border-[#18181B] transition-colors cursor-pointer disabled:opacity-60"
                   >
                     <option value="Woven Apparel (All Items)">Woven Apparel (All Items)</option>
                     <option value="Knit Apparel (All Items)">Knit Apparel (All Items)</option>
@@ -405,9 +495,10 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   </label>
                   <select
                     id="orderQuantity"
+                    disabled={isSubmitting}
                     value={formData.orderQuantity}
                     onChange={(e) => setFormData({ ...formData, orderQuantity: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] focus:outline-none focus:border-[#18181B] transition-colors cursor-pointer"
+                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] focus:outline-none focus:border-[#18181B] transition-colors cursor-pointer disabled:opacity-60"
                   >
                     {quantityOptions.map((opt) => (
                       <option key={opt} value={opt}>
@@ -426,10 +517,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 <input
                   id="targetDeliveryDate"
                   type="text"
+                  disabled={isSubmitting}
                   placeholder="e.g. Q4 2026 / Spring-Summer 2027 / 90 days FOB"
                   value={formData.targetDeliveryDate}
                   onChange={(e) => setFormData({ ...formData, targetDeliveryDate: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
+                  className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60"
                 />
               </div>
 
@@ -441,10 +533,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 <textarea
                   id="productRequirement"
                   rows={4}
+                  disabled={isSubmitting}
                   placeholder="Describe your garment specifications, target fabric weight (GSM), blends, finishes, colorways, or reference styles..."
                   value={formData.productRequirement}
                   onChange={(e) => setFormData({ ...formData, productRequirement: e.target.value })}
-                  className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors resize-y ${
+                  className={`w-full px-4 py-3 bg-[#FAF9F5] border text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors resize-y disabled:opacity-60 ${
                     errors.productRequirement ? 'border-red-500' : 'border-[#1A1A1A]/20'
                   }`}
                 />
@@ -464,10 +557,11 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 <input
                   id="additionalRequirements"
                   type="text"
+                  disabled={isSubmitting}
                   placeholder="e.g. OEKO-TEX, GOTS, specific lab testing requirements, custom barcode packaging..."
                   value={formData.additionalRequirements}
                   onChange={(e) => setFormData({ ...formData, additionalRequirements: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors"
+                  className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#1A1A1A]/20 text-sm text-[#18181B] placeholder-[#A8A196] focus:outline-none focus:border-[#18181B] transition-colors disabled:opacity-60"
                 />
               </div>
 
@@ -478,7 +572,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                     Attach Product References (Optional)
                   </label>
                   <span className="text-[11px] font-mono text-[#8C827A]">
-                    Max 15 MB · PDF, JPG, PNG, DOCX
+                    Max 4 MB · PDF, JPG, PNG, DOCX
                   </span>
                 </div>
                 <p className="text-xs text-[#6B655D] mb-3 font-light leading-relaxed">
@@ -490,6 +584,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                   ref={fileInputRef}
                   id="fileAttachmentInput"
                   type="file"
+                  disabled={isSubmitting}
                   accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
                   onChange={handleFileChange}
                   className="hidden"
@@ -498,7 +593,9 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 {/* File Attachment Presentation Box */}
                 {!attachedFile ? (
                   <div
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                      if (!isSubmitting) fileInputRef.current?.click();
+                    }}
                     className="border border-dashed border-[#1A1A1A]/25 hover:border-[#18181B] bg-[#F6F4EF]/60 hover:bg-[#F6F4EF] p-6 text-center cursor-pointer transition-all duration-200 group"
                   >
                     <UploadCloud className="w-6 h-6 text-[#8C827A] group-hover:text-[#18181B] mx-auto mb-2 transition-colors" />
@@ -507,7 +604,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                       <span className="text-[#6B655D] font-normal"> or drag and drop</span>
                     </div>
                     <div className="text-[11px] text-[#8C827A] mt-1 font-mono">
-                      Supported formats: PDF, JPG, JPEG, PNG, DOCX
+                      Supported formats: PDF, JPG, JPEG, PNG, DOCX (Optional)
                     </div>
                   </div>
                 ) : (
@@ -521,15 +618,16 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                           {attachedFile.name}
                         </div>
                         <div className="text-[11px] font-mono text-[#8C827A]">
-                          {formatFileSize(attachedFile.size)} · Ready to submit
+                          {formatFileSize(attachedFile.size)} · Ready to attach
                         </div>
                       </div>
                     </div>
 
                     <button
                       type="button"
+                      disabled={isSubmitting}
                       onClick={handleRemoveFile}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#B91C1C] hover:text-[#7F1D1D] bg-[#FAF9F5] border border-[#B91C1C]/20 hover:border-[#B91C1C]/40 transition-colors cursor-pointer shrink-0"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#B91C1C] hover:text-[#7F1D1D] bg-[#FAF9F5] border border-[#B91C1C]/20 hover:border-[#B91C1C]/40 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>Remove</span>
@@ -550,9 +648,10 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
+                    disabled={isSubmitting}
                     checked={formData.agreedToTerms}
                     onChange={(e) => setFormData({ ...formData, agreedToTerms: e.target.checked })}
-                    className="mt-1 w-4 h-4 text-[#18181B] rounded-none border border-[#1A1A1A]/30 focus:ring-0 cursor-pointer accent-[#18181B]"
+                    className="mt-1 w-4 h-4 text-[#18181B] rounded-none border border-[#1A1A1A]/30 focus:ring-0 cursor-pointer accent-[#18181B] disabled:opacity-60"
                   />
                   <span className="text-xs text-[#524E48] leading-relaxed group-hover:text-[#18181B] transition-colors">
                     I agree to be contacted regarding my inquiry.
@@ -571,10 +670,13 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 text-xs font-medium tracking-[0.16em] uppercase text-[#FAF9F5] bg-[#18181B] hover:bg-[#2C2B29] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-70"
+                  className="w-full py-4 text-xs font-medium tracking-[0.16em] uppercase text-[#FAF9F5] bg-[#18181B] hover:bg-[#2C2B29] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
-                    <span>RECORDING INQUIRY...</span>
+                    <span className="flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>SENDING INQUIRY...</span>
+                    </span>
                   ) : (
                     <>
                       <span>SUBMIT INQUIRY</span>
@@ -584,10 +686,10 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({ prefilledCategory, onC
                 </button>
               </div>
 
-              {/* Quiet Phase 1 Prototype Note */}
+              {/* Security & Recipient Notice */}
               <div className="text-center pt-2">
                 <span className="text-[11px] text-[#8C827A] font-mono">
-                  Phase 1 Interactive Prototype · Email automation connected in Phase 2
+                  Encrypted server-side delivery to efanrahman32824@gmail.com
                 </span>
               </div>
 
