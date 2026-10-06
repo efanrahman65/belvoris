@@ -115,6 +115,17 @@ export default async function handler(req: any, res: any) {
 
     const resend = new Resend(apiKey);
 
+    // In local dev/testing with unverified onboarding@resend.dev, route directly to the registered account owner
+    // to prevent Resend from rejecting with a 403 validation_error.
+    // In production (Vercel) or when a custom domain is configured, send directly to recipientEmail.
+    const isSandboxSender = fromEmail.includes('resend.dev');
+    const isLocalDev = process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production';
+
+    const targetRecipient =
+      isLocalDev && isSandboxSender
+        ? process.env.RESEND_DEV_RECIPIENT || 'wasiulislam32824@gmail.com'
+        : recipientEmail;
+
     // 3. Process optional attachment
     const emailAttachments: Array<{ filename: string; content: Buffer; contentType?: string }> = [];
     if (attachment && attachment.content && attachment.filename) {
@@ -247,7 +258,7 @@ export default async function handler(req: any, res: any) {
     </div>
     <div class="footer">
       <div><strong>Inquiry Received:</strong> ${formattedDate}</div>
-      <div style="margin-top: 4px;">Sent directly to: <code>${recipientEmail}</code> · To reply directly to the buyer, click "Reply" in your email client.</div>
+      <div style="margin-top: 4px;">Target Destination: <code>${recipientEmail}</code> · To reply directly to the buyer, click "Reply" in your email client.</div>
     </div>
   </div>
 </body>
@@ -279,21 +290,75 @@ ADDITIONAL COMPLIANCE & NOTES:
 ${additionalRequirements || 'None specified'}
 
 ====================================
-Recipient: ${recipientEmail}
+Destination: ${recipientEmail}
 `;
 
     // 5. Send via Resend with visitor's email set as Reply-To
     const sendResult = await resend.emails.send({
       from: fromEmail,
-      to: [recipientEmail],
+      to: [targetRecipient],
       replyTo: emailAddress,
-      subject: subject,
-      html: htmlContent,
-      text: textContent,
+      subject:
+        targetRecipient !== recipientEmail
+          ? `[Dev Sandbox] ${subject} (Intended for: ${recipientEmail})`
+          : subject,
+      html:
+        targetRecipient !== recipientEmail
+          ? `
+            <div style="background-color: #FEF3C7; border: 1px solid #F59E0B; padding: 14px; margin-bottom: 20px; font-size: 13px; color: #92400E; font-family: sans-serif; line-height: 1.5;">
+              <strong>Resend Sandbox Notice:</strong> Delivered to your verified Resend account (<code>${targetRecipient}</code>) because the sender domain (<code>${fromEmail}</code>) is in sandbox testing mode.<br/>
+              In production with a verified domain, inquiries route directly to: <strong>${recipientEmail}</strong>.
+            </div>
+            ${htmlContent}
+          `
+          : htmlContent,
+      text:
+        targetRecipient !== recipientEmail
+          ? `[Sandbox Delivery: Delivered to ${targetRecipient} | Intended Recipient: ${recipientEmail}]\n\n${textContent}`
+          : textContent,
       attachments: emailAttachments
     });
 
+    // If Resend returns a validation error due to sandbox restriction, attempt automatic fallback to the verified owner
     if (sendResult.error) {
+      if (
+        sendResult.error.name === 'validation_error' &&
+        sendResult.error.message?.includes('only send testing emails to your own email address')
+      ) {
+        const match = sendResult.error.message.match(/to your own email address \(([^)]+)\)/);
+        const ownerEmail = match ? match[1] : null;
+
+        if (ownerEmail && ownerEmail !== targetRecipient) {
+          console.warn(
+            `Resend sandbox restriction detected. Retrying delivery to verified account owner: ${ownerEmail}`
+          );
+          const fallbackResult = await resend.emails.send({
+            from: fromEmail,
+            to: [ownerEmail],
+            replyTo: emailAddress,
+            subject: `[Sandbox Delivery] ${subject} (Intended for: ${recipientEmail})`,
+            html: `
+              <div style="background-color: #FEF3C7; border: 1px solid #F59E0B; padding: 14px; margin-bottom: 20px; font-size: 13px; color: #92400E; font-family: sans-serif; line-height: 1.5;">
+                <strong>Resend Sandbox Notice:</strong> Delivered to your verified Resend account (<code>${ownerEmail}</code>) because the sender domain is in sandbox testing mode.<br/>
+                Intended production recipient: <strong>${recipientEmail}</strong>. Verify your domain at <a href="https://resend.com/domains" style="color: #92400E; font-weight: bold;">resend.com/domains</a> to deliver to any address.
+              </div>
+              ${htmlContent}
+            `,
+            text: `[Sandbox Delivery: Delivered to ${ownerEmail} | Intended Recipient: ${recipientEmail}]\n\n${textContent}`,
+            attachments: emailAttachments
+          });
+
+          if (!fallbackResult.error) {
+            return res.status(200).json({
+              success: true,
+              message: 'Inquiry received and sent successfully.',
+              id: fallbackResult.data?.id,
+              sandboxDeliveredTo: ownerEmail
+            });
+          }
+        }
+      }
+
       console.error('Resend API returned error:', sendResult.error);
       let errorMsg = sendResult.error.message || 'Failed to send inquiry email via Resend.';
       if (errorMsg.includes('only send testing emails to your own email address')) {
